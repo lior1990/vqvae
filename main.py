@@ -10,6 +10,7 @@ from torchvision import transforms
 import utils
 from datasets.dataset import ImageDataset
 from models.vqvae import VQVAE
+from summaries import TensorboardSummary
 
 parser = argparse.ArgumentParser()
 
@@ -79,6 +80,7 @@ results = {
 
 
 def train():
+    summary = TensorboardSummary("./results")
 
     for i in range(args.n_updates):
         x = next(iter(training_loader))
@@ -97,6 +99,10 @@ def train():
         results["loss_vals"].append(loss.cpu().detach().numpy())
         results["n_updates"] = i
 
+        summary.add_scalar("recon loss", recon_loss.item(), i)
+        summary.add_scalar("embedding loss", embedding_loss.item(), i)
+        summary.add_scalar("perplexity", perplexity.item(), i)
+
         if i % args.log_interval == 0:
             """
             save model and print values
@@ -105,6 +111,8 @@ def train():
                 hyperparameters = args.__dict__
                 utils.save_model_and_results(
                     model, results, hyperparameters, args.filename)
+                summary.visualize_image(i, x, "real")
+                summary.visualize_image(i, x_hat, "generated")
 
             print('Update #', i, 'Recon Error:',
                   np.mean(results["recon_errors"][-args.log_interval:]),
