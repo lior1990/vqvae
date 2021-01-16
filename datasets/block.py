@@ -25,8 +25,7 @@ class BlockDataset(Dataset):
         img = self.data[index]
         if self.transform is not None:
             img = self.transform(img)
-        label = 0
-        return img, label
+        return img
 
     def __len__(self):
         return len(self.data)

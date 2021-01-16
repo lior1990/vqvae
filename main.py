@@ -3,7 +3,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import argparse
+
+from torch.utils.data import DataLoader
+from torchvision import transforms
+
 import utils
+from datasets.dataset import ImageDataset
 from models.vqvae import VQVAE
 
 parser = argparse.ArgumentParser()
@@ -23,7 +28,7 @@ parser.add_argument("--n_embeddings", type=int, default=512)
 parser.add_argument("--beta", type=float, default=.25)
 parser.add_argument("--learning_rate", type=float, default=3e-4)
 parser.add_argument("--log_interval", type=int, default=50)
-parser.add_argument("--dataset",  type=str, default='CIFAR10')
+parser.add_argument("--dataset",  type=str, required=True)
 
 # whether or not to save model
 parser.add_argument("-save", action="store_true")
@@ -40,8 +45,17 @@ if args.save:
 Load data and define batch data loaders
 """
 
-training_data, validation_data, training_loader, validation_loader, x_train_var = utils.load_data_and_data_loaders(
-    args.dataset, args.batch_size)
+transform = transforms.Compose(
+    [
+        transforms.ToPILImage(),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5), inplace=True),
+    ]
+)
+
+dataset = ImageDataset(args.dataset, transform)
+training_loader = DataLoader(dataset, batch_size=args.batch_size, drop_last=False)
 """
 Set up VQ-VAE model with components defined in ./models/ folder
 """
@@ -67,12 +81,12 @@ results = {
 def train():
 
     for i in range(args.n_updates):
-        (x, _) = next(iter(training_loader))
+        x = next(iter(training_loader))
         x = x.to(device)
         optimizer.zero_grad()
 
         embedding_loss, x_hat, perplexity = model(x)
-        recon_loss = torch.mean((x_hat - x)**2) / x_train_var
+        recon_loss = torch.mean((x_hat - x)**2)
         loss = recon_loss + embedding_loss
 
         loss.backward()

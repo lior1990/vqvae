@@ -21,12 +21,7 @@ class VQVAE(nn.Module):
         # decode the discrete latent representation
         self.decoder = Decoder(embedding_dim, h_dim, n_res_layers, res_h_dim)
 
-        if save_img_embedding_map:
-            self.img_to_embedding_map = {i: [] for i in range(n_embeddings)}
-        else:
-            self.img_to_embedding_map = None
-
-    def forward(self, x, verbose=False):
+    def forward(self, x):
 
         z_e = self.encoder(x)
 
@@ -34,11 +29,5 @@ class VQVAE(nn.Module):
         embedding_loss, z_q, perplexity, _, _ = self.vector_quantization(
             z_e)
         x_hat = self.decoder(z_q)
-
-        if verbose:
-            print('original data shape:', x.shape)
-            print('encoded data shape:', z_e.shape)
-            print('recon data shape:', x_hat.shape)
-            assert False
 
         return embedding_loss, x_hat, perplexity

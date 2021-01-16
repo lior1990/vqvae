@@ -7,6 +7,8 @@ import os
 from datasets.block import BlockDataset, LatentBlockDataset
 import numpy as np
 
+SAVE_MODEL_PATH = os.path.join(os.getcwd(), "results")
+
 
 def load_cifar():
     train = datasets.CIFAR10(root="data", train=True, download=True,
@@ -104,12 +106,9 @@ def readable_timestamp():
 
 
 def save_model_and_results(model, results, hyperparameters, timestamp):
-    SAVE_MODEL_PATH = os.getcwd() + '/results'
-
     results_to_save = {
         'model': model.state_dict(),
         'results': results,
         'hyperparameters': hyperparameters
     }
-    torch.save(results_to_save,
-               SAVE_MODEL_PATH + '/vqvae_data_' + timestamp + '.pth')
+    torch.save(results_to_save, os.path.join(SAVE_MODEL_PATH, f"vqvae_data_{timestamp}.pth"))
