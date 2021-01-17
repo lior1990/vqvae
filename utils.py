@@ -105,10 +105,13 @@ def readable_timestamp():
         ' ', '_').replace(':', '_').lower()
 
 
-def save_model_and_results(model, results, hyperparameters, timestamp):
+def save_model_and_results(model, results, hyperparameters, timestamp, prefix=None):
     results_to_save = {
         'model': model.state_dict(),
         'results': results,
         'hyperparameters': hyperparameters
     }
-    torch.save(results_to_save, os.path.join(SAVE_MODEL_PATH, f"vqvae_data_{timestamp}.pth"))
+    model_name = f"vqvae_data_{timestamp}.pth"
+    if prefix is not None:
+        model_name = f"{prefix}_{model_name}"
+    torch.save(results_to_save, os.path.join(SAVE_MODEL_PATH, model_name))
