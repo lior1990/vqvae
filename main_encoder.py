@@ -99,10 +99,10 @@ def train():
         optimizer.zero_grad()
 
         z_ae = encoder(x)
-        _, z_q, _, _, _ = model.vector_quantization(z_ae)
+        embedding_loss, z_q, _, _, _ = model.vector_quantization(z_ae)
         x_hat = model.decoder(z_q)
         recon_loss = torch.mean((x_hat - x)**2)
-        loss = recon_loss
+        loss = recon_loss + embedding_loss
 
         loss.backward()
         optimizer.step()
@@ -111,6 +111,7 @@ def train():
         results["n_updates"] = i
 
         summary.add_scalar("recon loss", recon_loss.item(), i)
+        summary.add_scalar("embedding loss", embedding_loss.item(), i)
 
         if i % args.log_interval == 0:
             """
@@ -123,7 +124,7 @@ def train():
                     # plot different images every time
                     rand_indices_to_visualize = torch.randperm(x.shape[0])
                     x = x[rand_indices_to_visualize]
-                    x_hat = x[rand_indices_to_visualize]
+                    x_hat = x_hat[rand_indices_to_visualize]
                 summary.visualize_image(i, x, "real")
                 summary.visualize_image(i, x_hat, "generated")
 
