@@ -19,10 +19,12 @@ class Decoder(nn.Module):
 
     """
 
-    def __init__(self, in_dim, h_dim, n_res_layers, res_h_dim):
+    def __init__(self, in_dim, h_dim, n_res_layers, res_h_dim, n_dimension_changes):
         super(Decoder, self).__init__()
         kernel = 4
         stride = 2
+
+        upsample_modules = [*(nn.ConvTranspose2d(h_dim // 2, h_dim // 2, kernel_size=kernel, stride=stride, padding=1), nn.ReLU())] * (n_dimension_changes-2)
 
         self.inverse_conv_stack = nn.Sequential(
             nn.ConvTranspose2d(
@@ -31,6 +33,7 @@ class Decoder(nn.Module):
             nn.ConvTranspose2d(h_dim, h_dim // 2,
                                kernel_size=kernel, stride=stride, padding=1),
             nn.ReLU(),
+            *upsample_modules,
             nn.ConvTranspose2d(h_dim//2, 3, kernel_size=kernel,
                                stride=stride, padding=1)
         )
